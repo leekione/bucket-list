@@ -1,91 +1,142 @@
-import React, {useState} from 'react';
-import styled ,{ThemeProvider} from 'styled-components/native';
-import {theme} from './theme'
-import {StatusBar,Dimensions} from 'react-native';
+import React, { useState } from 'react';
+import styled, { ThemeProvider } from 'styled-components/native';
+import { theme } from './theme'
+import { StatusBar, Dimensions } from 'react-native';
 import Input from './components/Input'
-import IconButton from './components/IconButton';
-import { images } from './images';
 import Task from './components/Task';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import AppLoading from 'expo-app-loading';
+import DeleteAllTask from './components/DeleteAll';
 
 const Container = styled.View`
-  flex:1;
-  background-color:${({theme})=>theme.background};
-  justify-content:flex-start;
-  align-items:center;
+    flex:1;
+    background-color:${({ theme }) => theme.background};
+    justify-content:flex-start;
+    align-items:center;
 
-`;
+    `;
 
 const Title = styled.Text`
-  width:${({width})=> width - 40}px;
-  font-size: 40px;
-  font-weight:600;
-  border-radius:10px;
-  text-align:center;
-  background-color:${({theme})=>theme.itemBackground};
-  color:${({theme})=>theme.text};
-  margin:0 20px;
-`;
+    width:${({ width }) => width - 40}px;
+    font-size: 40px;
+    font-weight:600;
+    border-radius:10px;
+    text-align:center;
+    background-color:${({ theme }) => theme.itemBackground};
+    color:${({ theme }) => theme.text};
+    margin:0 20px;
+    `;
 
 const List = styled.ScrollView`
-  flex:1;
-  width:${({width})=> width-40}px;
-`;
+    flex:1;
+    width:${({ width }) => width - 40}px;
+    `;
 
 export default function App() {
-  const width = Dimensions.get('window').width;
-  const [newTask,setNewTask] = useState('');
-  const [tasks,setTasks] = useState({})
-    // '1':{id:'1',text:'test1',completed:false},
-    // '2':{id:'2',text:'test2',completed:false},
-    // '3':{id:'3',text:'test3',completed:false},
-    // '4':{id:'4',text:'test4',completed:false},
+    const width = Dimensions.get('window').width;
 
+    const [isReady, setIsReady] = useState(false);
+    const [newTask, setNewTask] = useState('');
+    const [tasks, setTasks] = useState({})
 
-  //추가
-  const _addTask = () =>{
-    const ID = Date.now().toString();
-    const newTaskObject = {
-      [ID] : {id:ID,text:newTask,completed:false}
+    //저장
+    const _saveTasks = async (key, value) => {
+        try {
+            const jsonValue = JSON.stringify(value)
+            await AsyncStorage.setItem(key, jsonValue)
+            setTasks(value);
+        } catch (e) {
+            console.error(e);
+        }
     }
-    setNewTask('');
-    setTasks({...tasks,...newTaskObject});
-  };
-  //삭제
-  const _deleteTask = id => {
-    const currentTasks = {...tasks};
-    delete currentTasks[id];
-    setTasks(currentTasks);
-  }
 
+    //불러오기
+    const getData = async (key) => {
+        try {
+            const jsonValue = await AsyncStorage.getItem(key)
+            const tasks = jsonValue != null ? JSON.parse(jsonValue) : {};
+            setTasks(tasks);
+          } catch(e) {
+            console.log('데이터 가져오기:'+jsonValue);
+          }
+        }
 
-  const _handleTextChange = text => {
-    setNewTask(text);
-  };
+    //추가
+    const _addTask = () => {
+        const ID = Date.now().toString();
+        const newTaskObject = {
+            [ID]: { id: ID, text: newTask, completed: false },
+        };
+        _saveTasks('tasks',{ ...tasks, ...newTaskObject });
+        setNewTask('');
+    };
+    //삭제
+    const _deleteTask = id => {
+        const currentTasks = { ...tasks };
+        delete currentTasks[id];
+        _saveTasks('tasks',currentTasks);
+    }
 
-  return (
-    <ThemeProvider theme ={theme}>
-    <Container>
-      <StatusBar
-        barStyle='light-content'
-        backgroundColor={theme.background}
-      />
-      <Title width={width}>버킷 리스트</Title>
-      <Input 
-        placeholder =" +항목추가"
-        value={newTask}
-        onChangeText={_handleTextChange}
-        onSubmitEditing={_addTask}
-        />
-        <List width={width}>
-          {Object.values(tasks)
-                 .reverse()
-                 .map(task => (
-                  <Task key = {task.id} text={text} deleteTask={_deleteTask}/>
-                 ))}
-        </List>
-    </Container>
-    </ThemeProvider>
-  );
+    //완료
+    const _toggleTask = id => {
+        const currentTasks = { ...tasks };
+        currentTasks[id]['completed'] = !currentTasks[id]['completed'];
+        _saveTasks('tasks',currentTasks);
+    }
+
+    //수정
+    const _updateTask = task => {
+    }
+
+    //전체 삭제
+    const _deleteAllTask = id => {
+        const currentTasks = {...tasks};
+        delete currentTasks[id];
+        _saveTasks('tasks',currentTasks);
+    }
+    const _handleTextChange = text => {
+        setNewTask(text);
+    };
+
+    return !isReady ? (
+
+        <AppLoading
+        startAsync={() =>{getData('tasks')}}
+        onFinish={() => setIsReady(true)}
+        onError={console.error}
+    />
+    ):(
+        <ThemeProvider theme={theme}>
+            <Container>
+                <StatusBar
+                    barStyle='light-content'
+                    backgroundColor={theme.background}
+                />
+                <Title width={width}>버킷 리스트</Title>
+                <Input
+                    placeholder=" +항목추가"
+                    value={newTask}
+                    onChangeText={_handleTextChange}
+                    onSubmitEditing={_addTask}
+                />
+                <List width={width}>
+                    {Object.values(tasks)
+                        .reverse()
+                        .map(task => (
+                            <Task
+                                key={task.id}
+                                task={task}
+                                deleteTask={_deleteTask}
+                                toggleTask={_toggleTask}
+                            />
+                        ))}
+                </List>
+                <DeleteAllTask>
+                    deleteAllTask={_deleteAllTask}
+                </DeleteAllTask>
+            </Container>
+        </ThemeProvider>
+    );
 }
 
 

@@ -17,22 +17,34 @@ const Container = styled.View`
 const Contents = styled.Text`
     flex:1;
     font-size:24px;
-    color:${({theme})=>theme.text};
+    color:${({theme,completed})=>(completed ? theme.done : theme.text)};
+    text-decoration : ${({completed})=> completed ? 'line-through' : 'none'};
 `;
 
-const Task = ({task, deleteTask}) => {
+const Task = ({task, deleteTask,toggleTask}) => {
     return (
         <Container>
-            <IconButton type={images.uncompleted}></IconButton>
-            <Contents>{task.text}</Contents>
-            <IconButton type={images.update}></IconButton>
-            <IconButton type={images.delete} id={task.id} onPressOut={deleteTask}></IconButton>
+            <IconButton 
+                type={task.completed ? images.completed : images.uncompleted}
+                id={task.id}
+                onPressOut={toggleTask}
+                completed={task.completed}
+                               ></IconButton>
+            <Contents completed={task.completed}>{task.text}</Contents>
+            {task.completed || <IconButton type={images.update}></IconButton>}
+            <IconButton 
+                type={images.delete} 
+                id={task.id} 
+                onPressOut={deleteTask}
+                completed={task.completed}
+                ></IconButton>
         </Container>
     )
 }
 Task.propTypes = {
     task:PropTypes.object.isRequired,
-    deleteTask:PropTypes.func.isRequired
+    deleteTask:PropTypes.func.isRequired,
+    toggleTask:PropTypes.func.isRequired
 }
 
 
