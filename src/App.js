@@ -34,11 +34,29 @@ const List = styled.ScrollView`
 export default function App() {
   const width = Dimensions.get('window').width;
   const [newTask,setNewTask] = useState('');
+  const [tasks,setTasks] = useState({})
+    // '1':{id:'1',text:'test1',completed:false},
+    // '2':{id:'2',text:'test2',completed:false},
+    // '3':{id:'3',text:'test3',completed:false},
+    // '4':{id:'4',text:'test4',completed:false},
 
+
+  //추가
   const _addTask = () =>{
-    alert('작성완료');
+    const ID = Date.now().toString();
+    const newTaskObject = {
+      [ID] : {id:ID,text:newTask,completed:false}
+    }
     setNewTask('');
+    setTasks({...tasks,...newTaskObject});
   };
+  //삭제
+  const _deleteTask = id => {
+    const currentTasks = {...tasks};
+    delete currentTasks[id];
+    setTasks(currentTasks);
+  }
+
 
   const _handleTextChange = text => {
     setNewTask(text);
@@ -59,10 +77,11 @@ export default function App() {
         onSubmitEditing={_addTask}
         />
         <List width={width}>
-          <Task text= "test1"/>
-          <Task text= "test2"/>
-          <Task text= "test3"/>
-          <Task text= "test4"/>
+          {Object.values(tasks)
+                 .reverse()
+                 .map(task => (
+                  <Task key = {task.id} text={text} deleteTask={_deleteTask}/>
+                 ))}
         </List>
     </Container>
     </ThemeProvider>

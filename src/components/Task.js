@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import IconButton from './IconButton';
 import {images} from '../images';
 
+
 const Container = styled.View`
     flex-direction:row;
     align-items:center;
@@ -19,18 +20,19 @@ const Contents = styled.Text`
     color:${({theme})=>theme.text};
 `;
 
-const Task = ({text}) => {
+const Task = ({task, deleteTask}) => {
     return (
         <Container>
             <IconButton type={images.uncompleted}></IconButton>
-            <Contents>{text}</Contents>
+            <Contents>{task.text}</Contents>
             <IconButton type={images.update}></IconButton>
-            <IconButton type={images.delete}></IconButton>
+            <IconButton type={images.delete} id={task.id} onPressOut={deleteTask}></IconButton>
         </Container>
     )
 }
 Task.propTypes = {
-    text:PropTypes.string.isRequired
+    task:PropTypes.object.isRequired,
+    deleteTask:PropTypes.func.isRequired
 }
 
 
