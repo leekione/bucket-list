@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import styled, { ThemeProvider } from 'styled-components/native';
 import { theme } from './theme'
-import { StatusBar, Dimensions,Alert } from 'react-native';
+import { StatusBar, Dimensions } from 'react-native';
 import Input from './components/Input'
 import Task from './components/Task';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppLoading from 'expo-app-loading';
 import DeleteAllTask from './components/DeleteAll';
-import LineButton from './components/LineButton';
 
 const Container = styled.View`
     flex:1;
@@ -103,36 +102,10 @@ export default function App() {
         newCurrentTasks.forEach((value,key)=> {
             if(value.completed){
                 delete currentTasks[key];
-                _saveTasks('tasks',currentTasks);
+                setTasks(currentTasks);
             }
         });
     }
-
-    //완료항목 전체 삭제
-    const _delAllTask = () => {
-        
-        const deleteCompletedItem = () => {
-            const currentTasks = {...tasks};
-            const filteredTasks =
-            Object.fromEntries(Object.entries(currentTasks)
-                                     .filter(task=>task[1].completed==false));
-            _saveTasks('tasks',filteredTasks);
-        }
-
-        Alert.alert(
-          "삭제",           //경고창 제목
-          "완료항목 전체를 삭제하시겠습니까?",   //경고창 메세지
-          [
-            {
-              text: "예",
-              onPress: () => deleteCompletedItem(),
-            },
-            { text: "아니오", 
-              onPress: () => {} 
-            }
-          ]
-        );
-    };
 
     const _onBlur = () => {
         setNewTask('');
@@ -177,10 +150,10 @@ export default function App() {
                             />
                         ))}
                 </List>
-                <LineButton
-                    text='완료항목 전체삭제'
-                    onPressOut={_delAllTask}
-                    />
+                <DeleteAllTask
+                    deleteAllTask={_deleteAllTask}
+                >
+                </DeleteAllTask>
             </Container>
         </ThemeProvider>
     );
