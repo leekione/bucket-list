@@ -86,14 +86,36 @@ export default function App() {
 
     //수정
     const _updateTask = task => {
+        const currentTasks = {...tasks};
+        currentTasks[task.id] = task;
+        _saveTasks('tasks',currentTasks);
     }
 
     //전체 삭제
-    const _deleteAllTask = id => {
-        const currentTasks = {...tasks};
-        delete currentTasks[id];
-        _saveTasks('tasks',currentTasks);
+    const _deleteAllTask = () => {
+        console.log('삭제');
+        // alert('삭제');
+        
+        const currentTasks = {...tasks};    
+        const newCurrentTasks = Object.entries(currentTasks);
+        console.log(newCurrentTasks)
+        for (let i =0; i < newCurrentTasks.length; i++){
+            for(let j=0; j < newCurrentTasks[i].length; j++){
+
+                if(newCurrentTasks[i][j].completed == true){
+                    console.log(newCurrentTasks[i]);
+                    console.log('성공')
+                    delete currentTasks[newCurrentTasks[i]];
+                    setTasks(currentTasks);
+                }
+            }
+        }
     }
+
+    const _onBlur = () => {
+        setNewTask('');
+    }
+
     const _handleTextChange = text => {
         setNewTask(text);
     };
@@ -118,6 +140,7 @@ export default function App() {
                     value={newTask}
                     onChangeText={_handleTextChange}
                     onSubmitEditing={_addTask}
+                    onBlur={_onBlur}
                 />
                 <List width={width}>
                     {Object.values(tasks)
@@ -128,11 +151,13 @@ export default function App() {
                                 task={task}
                                 deleteTask={_deleteTask}
                                 toggleTask={_toggleTask}
+                                updateTask={_updateTask}
                             />
                         ))}
                 </List>
-                <DeleteAllTask>
+                <DeleteAllTask
                     deleteAllTask={_deleteAllTask}
+                >
                 </DeleteAllTask>
             </Container>
         </ThemeProvider>

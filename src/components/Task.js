@@ -1,8 +1,9 @@
-import React from 'react';
+import React,{useState} from 'react';
 import styled from 'styled-components/native';
 import PropTypes from 'prop-types';
 import IconButton from './IconButton';
 import {images} from '../images';
+import Input from './Input';
 
 
 const Container = styled.View`
@@ -21,8 +22,36 @@ const Contents = styled.Text`
     text-decoration : ${({completed})=> completed ? 'line-through' : 'none'};
 `;
 
-const Task = ({task, deleteTask,toggleTask}) => {
-    return (
+const Task = ({task, deleteTask,toggleTask,updateTask}) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [text, setText] = useState(task.text);
+
+    const _updateBtnPress= () => {
+        setIsEditing(true);
+    }
+    const _onSubmitEditing = () => {
+        if(isEditing) {
+            const editedTask = Object.assign({}, task,{text});
+            setIsEditing(false);
+            updateTask(editedTask);
+        }
+    };
+
+    const _onBlur = () => {
+        if(isEditing){
+            setIsEditing(false);
+            setText(task.text);
+        }
+    }
+    return isEditing ? (
+        <Input
+            value={text}
+            onChangeText={text=> setText(text)}
+            onSubmitEditing={_onSubmitEditing}
+            onBlur={_onBlur}
+            />
+    
+    ):(
         <Container>
             <IconButton 
                 type={task.completed ? images.completed : images.uncompleted}
@@ -31,7 +60,7 @@ const Task = ({task, deleteTask,toggleTask}) => {
                 completed={task.completed}
                                ></IconButton>
             <Contents completed={task.completed}>{task.text}</Contents>
-            {task.completed || <IconButton type={images.update}></IconButton>}
+            {task.completed || (<IconButton type={images.update} onPressOut={_updateBtnPress}/>)}
             <IconButton 
                 type={images.delete} 
                 id={task.id} 
@@ -44,7 +73,8 @@ const Task = ({task, deleteTask,toggleTask}) => {
 Task.propTypes = {
     task:PropTypes.object.isRequired,
     deleteTask:PropTypes.func.isRequired,
-    toggleTask:PropTypes.func.isRequired
+    toggleTask:PropTypes.func.isRequired,
+    updateTask:PropTypes.func.isRequired
 }
 
 
